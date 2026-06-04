@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>像素工坊 - 图片压缩器</title>
+    <meta
+      name="description"
+      content="一个便捷的图片压缩应用，支持拖拽上传、压缩预设、质量调节和批量下载。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="backdrop backdrop-one"></div>
+    <div class="backdrop backdrop-two"></div>
+
+    <main class="shell">
+      <section class="hero card">
+        <div class="hero-copy">
+          <span class="eyebrow">PicForge</span>
+          <h1>像素工坊</h1>
+          <p class="lead">
+            把图片快速压缩成更轻巧的版本。拖进来，选一个压缩强度，马上下载。
+          </p>
+          <div class="hero-actions">
+            <label class="button button-primary" for="fileInput">选择图片</label>
+            <button class="button button-secondary" id="clearBtn" type="button">清空列表</button>
+          </div>
+          <div class="note">
+            支持浏览器可解码的常见图片格式，包括 JPG、PNG、WebP、GIF、AVIF 等。
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">待处理</span>
+            <strong id="pendingCount">0</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">已完成</span>
+            <strong id="doneCount">0</strong>
+          </div>
+          <div class="stat">
+            <span class="stat-label">节省空间</span>
+            <strong id="savedSize">0 KB</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="card controls">
+          <div class="dropzone" id="dropzone">
+            <input id="fileInput" type="file" accept="image/*" multiple hidden />
+            <div class="dropzone-icon">⬆</div>
+            <h2>拖拽图片到这里</h2>
+            <p>也可以点击按钮选择多张图片，一次性批量压缩。</p>
+          </div>
+
+          <div class="presets" role="tablist" aria-label="压缩预设">
+            <button class="preset active" data-preset="light" type="button">轻压缩</button>
+            <button class="preset" data-preset="balanced" type="button">均衡</button>
+            <button class="preset" data-preset="strong" type="button">强压缩</button>
+            <button class="preset" data-preset="max" type="button">极致</button>
+          </div>
+
+          <div class="control-grid">
+            <label class="control">
+              <span>压缩质量</span>
+              <div class="range-row">
+                <input id="quality" type="range" min="35" max="95" value="72" />
+                <output id="qualityValue">72</output>
+              </div>
+            </label>
+
+            <label class="control">
+              <span>最长边限制</span>
+              <div class="range-row">
+                <input id="maxEdge" type="range" min="800" max="5000" step="100" value="2560" />
+                <output id="maxEdgeValue">2560 px</output>
+              </div>
+            </label>
+
+            <label class="control">
+              <span>输出格式</span>
+              <select id="format">
+                <option value="auto">自动</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/png">PNG</option>
+                <option value="image/webp">WebP</option>
+                <option value="image/avif">AVIF</option>
+              </select>
+            </label>
+
+            <label class="control">
+              <span>背景颜色（JPG 用）</span>
+              <input id="background" type="color" value="#ffffff" />
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="button button-primary" id="processBtn" type="button">开始压缩</button>
+            <button class="button button-secondary" id="removeDoneBtn" type="button">移除已完成</button>
+          </div>
+        </div>
+
+        <section class="card queue">
+          <div class="section-head">
+            <div>
+              <h2>文件队列</h2>
+              <p>每张图都可以单独下载，压缩结果会显示原始大小和压缩后大小。</p>
+            </div>
+            <div class="queue-hint" id="queueHint">等待添加图片</div>
+          </div>
+          <div class="list" id="list"></div>
+        </section>
+      </section>
+    </main>
+
+    <template id="itemTemplate">
+      <article class="file-card">
+        <div class="preview">
+          <img alt="" />
+        </div>
+        <div class="file-body">
+          <div class="file-head">
+            <div>
+              <h3 class="file-name"></h3>
+              <p class="file-meta"></p>
+            </div>
+            <span class="status">待处理</span>
+          </div>
+          <div class="meter">
+            <div class="meter-fill"></div>
+          </div>
+          <div class="file-stats">
+            <span class="original-size">原始：-</span>
+            <span class="compressed-size">压缩后：-</span>
+            <span class="ratio">节省：-</span>
+          </div>
+          <div class="file-actions">
+            <button class="button button-secondary download-btn" type="button" disabled>下载</button>
+            <button class="button button-ghost remove-btn" type="button">移除</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
