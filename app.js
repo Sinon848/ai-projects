@@ -184,8 +184,7 @@ async function processItem(entry) {
 
   try {
     const image = await loadImage(entry.file);
-    const sourceType = entry.file.type || "image/jpeg";
-    const outputType = resolveOutputType(sourceType);
+    const outputType = resolveOutputType();
     const qualityValueNumber = Number(quality.value) / 100;
     const { width, height } = fitSize(image.width, image.height, Number(maxEdge.value));
 
@@ -290,18 +289,14 @@ function canvasToBlob(canvas, type, qualityLevel) {
   });
 }
 
-function resolveOutputType(sourceType) {
-  const selected = format.value;
+function resolveOutputType() {
+  const selected = format.value || "image/jpeg";
 
-  if (selected !== "auto") {
+  if (supportedMime.has(selected)) {
     return selected;
   }
 
-  if (supportedMime.has("image/webp")) {
-    return "image/webp";
-  }
-
-  return sourceType === "image/png" ? "image/png" : "image/jpeg";
+  return "image/jpeg";
 }
 
 function fitSize(width, height, maxEdgeLength) {

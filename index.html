@@ -27,7 +27,7 @@
             <button class="button button-secondary" id="clearBtn" type="button">清空列表</button>
           </div>
           <div class="note">
-            支持浏览器可解码的常见图片格式，包括 JPG、PNG、WebP、GIF、AVIF 等。
+            默认输出 JPG，也可以切换成 PNG、WebP 或 AVIF。支持浏览器可解码的常见图片格式，包括 JPG、PNG、WebP、GIF、AVIF 等。
           </div>
         </div>
 
@@ -81,10 +81,9 @@
             </label>
 
             <label class="control">
-              <span>输出格式</span>
+              <span>输出格式（默认 JPG）</span>
               <select id="format">
-                <option value="auto">自动</option>
-                <option value="image/jpeg">JPG</option>
+                <option value="image/jpeg" selected>JPG</option>
                 <option value="image/png">PNG</option>
                 <option value="image/webp">WebP</option>
                 <option value="image/avif">AVIF</option>

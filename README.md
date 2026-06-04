@@ -1,32 +1,25 @@
-# 图片压缩工坊
+# Image Compression Workshop
 
-一个可以在浏览器里直接使用的图片压缩应用。
+A lightweight browser-based image compression app for quick local use.
 
-## 功能
+## Features
 
-- 拖拽或选择多张图片批量处理
-- 提供轻压缩、均衡、强压缩、极致四档预设
-- 可手动调整压缩质量和最长边限制
-- 支持 JPG、PNG、WebP、AVIF 等常见输出格式
-- 每张图片都可单独下载
+- Drag and drop or select multiple images for batch compression
+- Four presets: Light, Balanced, Strong, and Max
+- Manual control over compression quality and maximum edge length
+- Default output is JPG, with PNG, WebP, and AVIF available
+- Download each compressed image individually
 
-## 使用方式
+## How To Use
 
-1. 直接用浏览器打开 `index.html`
-2. 拖入图片或点击“选择图片”
-3. 选一个压缩预设，或自己调参数
-4. 点击“开始压缩”
-5. 在每张图片卡片上下载结果
+1. Open `index.html` in a browser, or run `launch-local.bat` for a local launcher.
+2. Add one or more images.
+3. Choose a preset or adjust the settings manually.
+4. Click Start Compression.
+5. Download each finished result separately.
 
-## 说明
+## Notes
 
-- 这个应用依赖浏览器的图片解码能力，所以能处理的“任意格式”取决于浏览器本身支持哪些图片格式。
-- 如果输出 JPG，透明区域会使用你设置的背景色填充。
-
-## 本地启动
-
-如果你想在本机一键打开，直接双击 `launch-local.bat`，它会自动启动本地服务并打开浏览器。
-
-## 部署
-
-如果要发布到 GitHub Pages，直接把仓库根目录作为站点源即可。
+- Supported source formats depend on what the browser can decode.
+- If you export JPG, transparent areas are filled with the background color you choose.
+- The local launcher creates or updates a desktop shortcut and uses the bundled icon in `assets/shortcut-icon.ico`.
