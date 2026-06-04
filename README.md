@@ -22,4 +22,5 @@ A lightweight browser-based image compression app for quick local use.
 
 - Supported source formats depend on what the browser can decode.
 - If you export JPG, transparent areas are filled with the background color you choose.
-- The local launcher creates or updates a desktop shortcut and uses the bundled icon in `assets/shortcut-icon.ico`.
+- The local launcher keeps one desktop shortcut named `图片压缩工坊` and uses the bundled icon in `assets/shortcut-icon.ico`.
+- If Node.js is not installed, the launcher falls back to opening `index.html` directly.
