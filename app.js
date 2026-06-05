@@ -32,11 +32,16 @@ const supportedMime = new Set(["image/jpeg", "image/png", "image/webp", "image/a
 bindEvents();
 renderEmptyState();
 syncLabels();
+updateCounters();
 
 function bindEvents() {
   fileInput.addEventListener("change", () => {
     addFiles(fileInput.files);
     fileInput.value = "";
+  });
+
+  dropzone.addEventListener("click", () => {
+    fileInput.click();
   });
 
   ["dragenter", "dragover"].forEach((eventName) => {
@@ -124,7 +129,7 @@ function createItem(id, file) {
   removeBtn.addEventListener("click", () => removeItem(id));
   downloadBtn.addEventListener("click", () => downloadItem(id));
 
-  const item = {
+  return {
     id,
     file,
     node,
@@ -144,38 +149,35 @@ function createItem(id, file) {
     outputName: null,
     state: "pending"
   };
-
-  return item;
 }
 
 async function processAll() {
-  const entries = Array.from(items.values());
+  const entries = Array.from(items.values()).filter((entry) => entry.state !== "done");
+
+  if (items.size === 0) {
+    queueHint.textContent = "å…ˆæ·»åŠ å‡ å¼ å›¾ç‰‡ï¼Œå†å¼€å§‹åŽ‹ç¼©";
+    return;
+  }
 
   if (entries.length === 0) {
-    queueHint.textContent = "å…ˆæ·»åŠ å‡ å¼ å›¾ç‰‡ï¼Œå†å¼€å§‹åŽ‹ç¼©";
+    queueHint.textContent = "é˜Ÿåˆ—é‡Œçš„å›¾ç‰‡éƒ½å·²å¤„ç†å®Œæˆ";
     return;
   }
 
   processBtn.disabled = true;
   queueHint.textContent = "æ­£åœ¨å¤„ç†å›¾ç‰‡...";
+  updateCounters();
 
-  let completed = 0;
-  let saved = 0;
-
-  for (const entry of entries) {
-    await processItem(entry);
-    completed += 1;
-
-    if (entry.state === "done" && entry.file.size > entry.outputBlob.size) {
-      saved += entry.file.size - entry.outputBlob.size;
+  try {
+    for (const entry of entries) {
+      await processItem(entry);
+      updateCounters();
     }
-
-    updateCounters(completed, saved);
+  } finally {
+    processBtn.disabled = false;
+    queueHint.textContent = "å¤„ç†å®Œæˆ";
+    updateCounters();
   }
-
-  processBtn.disabled = false;
-  queueHint.textContent = "å…¨éƒ¨å¤„ç†å®Œæˆ";
-  updateCounters(entries.length, saved);
 }
 
 async function processItem(entry) {
@@ -228,10 +230,8 @@ async function processItem(entry) {
     entry.compressedSize.textContent = `åŽ‹ç¼©åŽï¼š${formatBytes(blob.size)}`;
     entry.ratio.textContent = `èŠ‚çœï¼š${getSavingText(entry.file.size, blob.size)}`;
     entry.downloadBtn.disabled = false;
-    entry.status.classList.remove("error");
     setStatus(entry, "å·²å®Œæˆ", "done");
     setMeter(entry, 100);
-    updateCounters();
   } catch (error) {
     console.error(error);
     entry.compressedSize.textContent = "åŽ‹ç¼©åŽï¼šå¤±è´¥";
@@ -284,7 +284,7 @@ function canvasToBlob(canvas, type, qualityLevel) {
         canvas.toBlob((fallback) => resolve(fallback), "image/jpeg", safeQuality);
       },
       requestedType,
-      requestedType === "image/jpeg" ? safeQuality : safeQuality
+      safeQuality
     );
   });
 }
@@ -359,16 +359,17 @@ function getSavingText(original, compressed) {
   return `${percent.toFixed(1)}%`;
 }
 
-function updateCounters(completed = countDone(), saved = calculateSaved()) {
-  pendingCount.textContent = `${Math.max(items.size - completed, 0)}`;
-  doneCount.textContent = `${completed}`;
-  savedSize.textContent = formatBytes(saved);
+function updateCounters() {
+  const done = countByState("done");
+  pendingCount.textContent = `${Math.max(items.size - done, 0)}`;
+  doneCount.textContent = `${done}`;
+  savedSize.textContent = formatBytes(calculateSaved());
 }
 
-function countDone() {
+function countByState(state) {
   let total = 0;
   items.forEach((entry) => {
-    if (entry.state === "done") {
+    if (entry.state === state) {
       total += 1;
     }
   });
@@ -388,10 +389,10 @@ function calculateSaved() {
 function setStatus(entry, text, kind) {
   entry.status.textContent = text;
   entry.status.classList.remove("done", "error");
-  if (kind) {
+  if (kind === "done" || kind === "error") {
     entry.status.classList.add(kind);
   }
-  entry.state = kind === "done" ? "done" : kind === "error" ? "working";
+  entry.state = kind ?? "pending";
 }
 
 function setMeter(entry, value) {
@@ -428,11 +429,70 @@ function removeItem(id) {
 
   entry.node.remove();
   items.delete(id);
-  queueHint.textContent = items.size ? ``{items.size} å¼ å›¾ç‰‡`, : "çº·å¾…æ·»åŠ å›¾ç‰‡";
+  queueHint.textContent = items.size ? `å½“å‰é˜Ÿåˆ— ${items.size} å¼ å›¾ç‰‡` : "ç­‰å¾…æ·»åŠ å›¾ç‰‡";
   renderEmptyState();
   updateCounters();
 }
 
 function clearAll() {
   Array.from(items.keys()).forEach((id) => removeItem(id));
-  queueHint.textContent = "ç®¶'–úšÞï–*ƒ–nûž&ˆì(€É•¹‘•ÉµÁÑåMÑ…Ñ” ¤ì)ô()™Õ¹Ñ¥½¸É•µ½Ù•½¹” ¤ì(€ÉÉ…ä¹™É½´¡¥Ñ•µÌ¹Ù…±Õ•Ì ¤¤(€€€€¹™¥±Ñ•È ¡•¹ÑÉä¤€ôø•¹ÑÉä¹ÍÑ…Ñ”€ôôô€‰‘½¹”ˆ¤(€€€€¹™½É…  ¡•¹ÑÉä¤€ôøÉ•µ½Ù•%Ñ•´¡•¹ÑÉä¹¥¤¤ì)ô()™Õ¹Ñ¥½¸É•¹‘•ÉµÁÑåMÑ…Ñ” ¤ì(€½¹ÍÐ¡…Í%Ñ•µÌ€ô¥Ñ•µÌ¹Í¥é”€ø€Àì(€½¹ÍÐÕÉÉ•¹Ð€ô±¥ÍÐ¹ÅÕ•ÉåM•±•Ñ½È ˆ¹•µÁÑäµÍÑ…Ñ”ˆ¤ì((€¥˜€ …¡…Í%Ñ•µÌ€˜˜€…ÕÉÉ•¹Ð¤ì(€€€½¹ÍÐ•µÁÑä€ô‘½Õµ•¹Ð¹É•…Ñ•±•µ•¹Ð ‰‘¥Øˆ¤ì(€€€•µÁÑä¹±…ÍÍ9…µ”€ô€‰•µÁÑäµÍÑ…Ñ”ˆì(€€€•µÁÑä¹Ñ•áÑ½¹Ñ•¹Ð€ô€‹’úšÊ‡šr'¢¾–"¯–"Ã–nûž&šZ’îØ»’â·’ösžR£žj–nûž&¾ò3–7–ò–ž/–:/žò¤»’ú³¢þg’â«–:/žò¤¹àˆ°(€€€±¥ÍÐ¹…ÁÁ•¹‘¡¥±¡•µÁÑä¤ì(€ô((€¥˜€¡¡…Í%Ñ•µÌ€˜˜ÕÉÉ•¹Ð¤ì(€€€ÕÉÉ•¹Ð¹É•µ½Ù” ¤ì(€ô((€ÕÁ‘…Ñ•½Õ¹Ñ•ÉÌ ¤ì)ô()™Õ¹Ñ¥½¸…ÁÁ±åAÉ•Í•Ð¡¹…µ”¤ì(€½¹ÍÐ½¹™¥œ€ôÁÉ•Í•Ñ½¹™¥m¹…µ•tì(€¥˜€ …½¹™¥œ¤ì(€€€É•ÑÕÉ¸ì(€ô((€ÅÕ…±¥Ñä¹Ù…±Õ”€ôMÑÉ¥¹œ¡½¹™¥œ¹ÅÕ…±¥Ñä¤ì(€µ…á‘”¹Ù…±Õ”€ôMÑÉ¥¹œ¡½¹™¥œ¹µ…á‘”¤ì((€ÁÉ•Í•Ñ	ÕÑÑ½¹Ì¹™½É…  ¡‰ÕÑÑ½¸¤€ôøì(€€€‰ÕÑÑ½¸¹±…ÍÍ1¥ÍÐ¹Ñ½±” ‰…Ñ¥Ù”ˆ°‰ÕÑÑ½¸¹‘…Ñ…Í•Ð¹ÁÉ•Í•Ð€ôôô¹…µ”¤ì(€ô¤ì((€Íå¹1…‰•±Ì ¤ì)ô()™Õ¹Ñ¥½¸±•…ÉAÉ•Í•Ð ¤ì(€ÁÉ•Í•Ñ	ÕÑÑ½¹Ì¹™½É…  ¡‰ÕÑÑ½¸¤€ôø‰ÕÑÑ½¸¹±…ÍÍ1¥ÍÐ¹É•µ½Ù” ‰…Ñ¥Ù”ˆ¤¤ì)ô()™Õ¹Ñ¥½¸Íå¹1…‰•±Ì ¤ì(€ÅÕ…±¥ÑåY…±Õ”¹Ñ•áÑ½¹Ñ•¹Ð€ôÅÕ…±¥Ñä¹Ù…±Õ”ì(€µ…á‘•Y…±Õ”¹Ñ•áÑ½¹Ñ•¹Ð€ô€‘íµ…á‘”¹Ù…±Õ•ôÁá€ì)ô()™Õ¹Ñ¥½¸¥Í%µ…•¥±”¡™¥±”¤ì(€¥˜€ …™¥±”¤ì(€€€É•ÑÕÉ¸™…±Í”ì(€ô((€¥˜€¡™¥±”¹ÑåÁ”ü¹ÍÑ…ÉÑÍ]¥Ñ  ‰¥µ…”¼ˆ¤¤ì(€€€É•ÑÕÉ¸ÑÉÕ”ì(€ô((€É•ÑÕÉ¸€½p¸¡Á¹ñ©Á”ýñÝ•‰Áñ¥™ñ…Ù¥™ñ‰µÁñ¡•¥ñ¡•¥™ñÑ¥™ñÑ¥™˜¤½¤¹Ñ•ÍÐ¡™¥±”¹¹…µ”¤ì)ô
+  queueHint.textContent = "ç­‰å¾…æ·»åŠ å›¾ç‰‡";
+  renderEmptyState();
+  updateCounters();
+}
+
+function removeDone() {
+  Array.from(items.entries()).forEach(([id, entry]) => {
+    if (entry.state === "done") {
+      removeItem(id);
+    }
+  });
+  queueHint.textContent = items.size ? `å½“å‰é˜Ÿåˆ— ${items.size} å¼ å›¾ç‰‡` : "ç­‰å¾…æ·»åŠ å›¾ç‰‡";
+  renderEmptyState();
+  updateCounters();
+}
+
+function renderEmptyState() {
+  const empty = list.querySelector(".empty-state");
+
+  if (items.size > 0) {
+    empty?.remove();
+    return;
+  }
+
+  if (empty) {
+    return;
+  }
+
+  const node = document.createElement("div");
+  node.className = "empty-state";
+  node.textContent = "è¿˜æ²¡æœ‰å›¾ç‰‡ï¼Œå…ˆæ·»åŠ ä¸€å¼ è¯•è¯•ã€‚";
+  list.appendChild(node);
+}
+
+function applyPreset(name) {
+  const config = presetConfig[name];
+  if (!config) {
+    return;
+  }
+
+  quality.value = config.quality;
+  maxEdge.value = config.maxEdge;
+  presetButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.preset === name);
+  });
+  syncLabels();
+}
+
+function clearPreset() {
+  presetButtons.forEach((button) => button.classList.remove("active"));
+}
+
+function syncLabels() {
+  qualityValue.textContent = quality.value;
+  maxEdgeValue.textContent = `${maxEdge.value} px`;
+}
+
+function isImageFile(file) {
+  return file.type.startsWith("image/");
+}
