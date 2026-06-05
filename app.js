@@ -28,6 +28,24 @@ const presetConfig = {
 };
 
 const supportedMime = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+const imageExtensions = new Set([
+  "jpg",
+  "jpeg",
+  "jfif",
+  "png",
+  "gif",
+  "webp",
+  "avif",
+  "bmp",
+  "ico",
+  "svg",
+  "heic",
+  "heif",
+  "tif",
+  "tiff",
+  "pjp",
+  "pjpeg"
+]);
 
 bindEvents();
 renderEmptyState();
@@ -87,20 +105,27 @@ function bindEvents() {
 function addFiles(fileList) {
   const files = Array.from(fileList ?? []);
   const imageFiles = files.filter((file) => isImageFile(file));
+  const rejectedCount = files.length - imageFiles.length;
 
   if (imageFiles.length === 0) {
-    queueHint.textContent = "没有识别到图片文件";
+    queueHint.textContent = files.length ? "没有识别到可处理的图片文件" : "等待添加图片";
     return;
   }
 
   imageFiles.forEach((file) => {
-    const id = `${Date.now()}-${++sequence}`;
-    const entry = createItem(id, file);
-    items.set(id, entry);
-    list.appendChild(entry.node);
+    try {
+      const id = `${Date.now()}-${++sequence}`;
+      const entry = createItem(id, file);
+      items.set(id, entry);
+      list.appendChild(entry.node);
+    } catch (error) {
+      console.error("Failed to add file to queue:", file?.name, error);
+    }
   });
 
-  queueHint.textContent = `当前队列 ${items.size} 张图片`;
+  queueHint.textContent = rejectedCount > 0
+    ? `当前队列 ${items.size} 张图片，已忽略 ${rejectedCount} 个非图片文件`
+    : `当前队列 ${items.size} 张图片`;
   renderEmptyState();
   updateCounters();
 }
@@ -494,5 +519,16 @@ function syncLabels() {
 }
 
 function isImageFile(file) {
-  return file.type.startsWith("image/");
+  const mimeType = String(file?.type || "").toLowerCase();
+  if (mimeType.startsWith("image/")) {
+    return true;
+  }
+
+  const extension = getFileExtension(file?.name || "");
+  return imageExtensions.has(extension);
+}
+
+function getFileExtension(name) {
+  const match = /\.([^.]+)$/.exec(name);
+  return match ? match[1].toLowerCase() : "";
 }
