@@ -9,8 +9,6 @@ const pendingCount = document.getElementById("pendingCount");
 const doneCount = document.getElementById("doneCount");
 const savedSize = document.getElementById("savedSize");
 const queueHint = document.getElementById("queueHint");
-const browserCheckSummary = document.getElementById("browserCheckSummary");
-const browserCheckList = document.getElementById("browserCheckList");
 const quality = document.getElementById("quality");
 const qualityValue = document.getElementById("qualityValue");
 const maxEdge = document.getElementById("maxEdge");
@@ -53,7 +51,6 @@ bindEvents();
 renderEmptyState();
 syncLabels();
 updateCounters();
-initBrowserCheck();
 
 function bindEvents() {
   fileInput.addEventListener("change", () => {
@@ -105,75 +102,6 @@ function bindEvents() {
   });
 }
 
-async function initBrowserCheck() {
-  const checks = [
-    {
-      id: "file-api",
-      label: "文件选择",
-      required: true,
-      passed: supportsFileApi(),
-      detail: "支持选择本地图片并读取文件信息"
-    },
-    {
-      id: "drag-drop",
-      label: "拖拽上传",
-      required: false,
-      passed: supportsDragDrop(),
-      detail: "可把图片直接拖到页面里"
-    },
-    {
-      id: "canvas",
-      label: "Canvas 处理",
-      required: true,
-      passed: supportsCanvas2D(),
-      detail: "压缩需要把图片绘制到画布"
-    },
-    {
-      id: "decode",
-      label: "图片解码",
-      required: true,
-      passed: await canDecodeSampleImage(),
-      detail: "浏览器需要能读取常见图片"
-    },
-    {
-      id: "encode",
-      label: "输出导出",
-      required: true,
-      passed: false,
-      detail: "检测输出格式支持情况"
-    }
-  ];
-
-  const outputSupport = await probeOutputEncoders();
-  checks.find((check) => check.id === "encode").passed = outputSupport.jpeg;
-  checks.find((check) => check.id === "encode").detail = [
-    `JPG: ${outputSupport.jpeg ? "可用" : "不支持"}`,
-    `PNG: ${outputSupport.png ? "可用" : "不支持"}`,
-    `WebP: ${outputSupport.webp ? "可用" : "不支持"}`,
-    `AVIF: ${outputSupport.avif ? "可用" : "不支持"}`
-  ].join(" / ");
-
-  renderBrowserCheck(checks);
-  const requiredFailed = checks.filter((check) => check.required && !check.passed);
-
-  if (requiredFailed.length > 0) {
-    browserCheckSummary.textContent = "受限";
-    browserCheckSummary.style.background = "rgba(255, 125, 138, 0.14)";
-    browserCheckSummary.style.color = "#ffd1d7";
-    processBtn.disabled = true;
-    processBtn.title = `当前浏览器缺少必要能力：${requiredFailed.map((check) => check.label).join("、")}`;
-    if (items.size === 0) {
-      queueHint.textContent = "当前浏览器环境不完整，建议更换 Chrome / Edge";
-    }
-  } else {
-    browserCheckSummary.textContent = "可用";
-    browserCheckSummary.style.background = "rgba(120, 227, 200, 0.12)";
-    browserCheckSummary.style.color = "#d8fff6";
-    processBtn.disabled = false;
-    processBtn.title = "";
-  }
-}
-
 function addFiles(fileList) {
   const files = Array.from(fileList ?? []);
   const imageFiles = files.filter((file) => isImageFile(file));
@@ -200,30 +128,6 @@ function addFiles(fileList) {
     : `当前队列 ${items.size} 张图片`;
   renderEmptyState();
   updateCounters();
-}
-
-function renderBrowserCheck(checks) {
-  if (!browserCheckList) {
-    return;
-  }
-
-  browserCheckList.innerHTML = checks
-    .map((check) => {
-      const stateLabel = check.passed ? (check.required ? "正常" : "可选") : (check.required ? "不支持" : "未启用");
-      const stateClass = check.passed ? (check.required ? "pass" : "optional") : (check.required ? "fail" : "optional");
-      const itemClass = check.passed ? (check.required ? "pass" : "optional") : "fail";
-
-      return `
-        <div class="browser-check-item ${itemClass}">
-          <div class="browser-check-meta">
-            <div class="browser-check-name">${check.label}</div>
-            <div class="browser-check-desc">${check.detail}</div>
-          </div>
-          <div class="browser-check-state ${stateClass}">${stateLabel}</div>
-        </div>
-      `;
-    })
-    .join("");
 }
 
 function createItem(id, file) {
@@ -627,82 +531,4 @@ function isImageFile(file) {
 function getFileExtension(name) {
   const match = /\.([^.]+)$/.exec(name);
   return match ? match[1].toLowerCase() : "";
-}
-
-function supportsFileApi() {
-  return typeof window.File === "function"
-    && typeof window.Blob === "function"
-    && typeof window.FileList === "function"
-    && typeof URL.createObjectURL === "function";
-}
-
-function supportsDragDrop() {
-  return "draggable" in document.createElement("span")
-    && "DataTransfer" in window
-    && "DragEvent" in window;
-}
-
-function supportsCanvas2D() {
-  const canvas = document.createElement("canvas");
-  return typeof canvas.getContext === "function" && !!canvas.getContext("2d");
-}
-
-async function canDecodeSampleImage() {
-  const image = new Image();
-  const sampleDataUrl =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j7XcAAAAASUVORK5CYII=";
-
-  try {
-    image.src = sampleDataUrl;
-    if (typeof image.decode === "function") {
-      await image.decode();
-      return image.naturalWidth > 0 && image.naturalHeight > 0;
-    }
-
-    return await new Promise((resolve) => {
-      image.onload = () => resolve(image.naturalWidth > 0 && image.naturalHeight > 0);
-      image.onerror = () => resolve(false);
-    });
-  } catch {
-    return false;
-  }
-}
-
-async function probeOutputEncoders() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1;
-  canvas.height = 1;
-
-  const context = canvas.getContext("2d");
-  if (!context || typeof canvas.toBlob !== "function") {
-    return { jpeg: false, png: false, webp: false, avif: false };
-  }
-
-  const types = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-  const results = {
-    jpeg: false,
-    png: false,
-    webp: false,
-    avif: false
-  };
-
-  for (const type of types) {
-    const supported = await new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        resolve(Boolean(blob && blob.type === type));
-      }, type, 0.8);
-    });
-
-    if (type === "image/jpeg") {
-      results.jpeg = supported;
-    } else if (type === "image/png") {
-      results.png = supported;
-    } else if (type === "image/webp") {
-      results.webp = supported;
-    } else if (type === "image/avif") {
-      results.avif = supported;
-    }
-  }
-
-  return results;
 }

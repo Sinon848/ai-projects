@@ -24,7 +24,6 @@
 
 - 支持的源图片格式取决于浏览器本身能否解码。
 - 如果导出 JPG，透明区域会使用你选择的背景色填充。
-- 页面顶部会自动显示浏览器自检结果，帮助判断当前环境是否适合运行。
 - 本地启动器会保留一个桌面快捷方式，名称为 `图片压缩工坊`，并使用 `assets/shortcut-icon.ico` 作为图标。
 - 如果未安装 Node.js，本地启动器会直接打开 `index.html`。
 
@@ -54,6 +53,5 @@ A lightweight browser-based image compression app for quick local use.
 
 - Supported source formats depend on what the browser can decode.
 - If you export JPG, transparent areas are filled with the background color you choose.
-- The page shows a browser self-check at the top so users can quickly see whether the environment is suitable.
 - The local launcher keeps one desktop shortcut named `图片压缩工坊` and uses the bundled icon in `assets/shortcut-icon.ico`.
 - If Node.js is not installed, the launcher falls back to opening `index.html` directly.
