@@ -187,6 +187,109 @@ h1 {
   line-height: 1.6;
 }
 
+.browser-check {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.browser-check-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.browser-check-label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.browser-check h2 {
+  margin-top: 6px;
+  font-size: 1.08rem;
+}
+
+.browser-check-badge {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(120, 227, 200, 0.12);
+  color: #d8fff6;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.browser-check-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.browser-check-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.browser-check-item.pass {
+  border-color: rgba(120, 227, 200, 0.26);
+  background: rgba(120, 227, 200, 0.08);
+}
+
+.browser-check-item.fail {
+  border-color: rgba(255, 125, 138, 0.26);
+  background: rgba(255, 125, 138, 0.08);
+}
+
+.browser-check-item.optional {
+  border-color: rgba(95, 208, 255, 0.18);
+}
+
+.browser-check-meta {
+  min-width: 0;
+}
+
+.browser-check-name {
+  font-weight: 700;
+}
+
+.browser-check-desc {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.browser-check-state {
+  flex: 0 0 auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.browser-check-state.pass {
+  color: #b8fff0;
+}
+
+.browser-check-state.fail {
+  color: #ffd1d7;
+}
+
+.browser-check-state.optional {
+  color: #caecff;
+}
+
 .stats {
   display: grid;
   gap: 12px;
@@ -515,5 +618,11 @@ output {
 
   .section-head {
     flex-direction: column;
+  }
+
+  .browser-check-head,
+  .browser-check-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

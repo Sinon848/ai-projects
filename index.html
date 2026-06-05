@@ -29,6 +29,17 @@
           <div class="note">
             默认输出 JPG，也可以切换成 PNG、WebP 或 AVIF。支持浏览器可解码的常见图片格式，包括 JPG、PNG、WebP、GIF、AVIF 等。
           </div>
+
+          <div class="browser-check" id="browserCheck" aria-live="polite">
+            <div class="browser-check-head">
+              <div>
+                <span class="browser-check-label">浏览器自检</span>
+                <h2>当前环境支持情况</h2>
+              </div>
+              <span class="browser-check-badge" id="browserCheckSummary">检查中</span>
+            </div>
+            <div class="browser-check-list" id="browserCheckList"></div>
+          </div>
         </div>
 
         <div class="stats">
